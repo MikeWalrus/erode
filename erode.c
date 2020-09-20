@@ -2,20 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
-
-#define WID 6 
-#define LEN 6
-#define RIVAL ((*player == 1) ? 2 : 1)
-#define RiVAL ((player == 1) ? 2 : 1)
-
-
-int refresh(int data[][LEN]);
-void reset(int data[][LEN]);
-int ask(int data[][LEN], int * player);
-int calc(int data[][LEN], int count[]);
-bool isNear(int data[][LEN], int x, int y, int player);
-int set(int data[][LEN], int x, int y, int player);
-
+#include "erode.h"
 
 int main(void)
 {
@@ -23,35 +10,37 @@ int main(void)
 	int data[WID][LEN];
 	int stat;
 	int count[] = {0, 0, 0};
+	bool robot = false;
 	reset(data);
 	refresh(data);
-	while((stat = ask(data, &player)) != 0)
+	while((stat = ask(data, &player, robot)) != 0)
 	{
 		switch(stat)
 		{
-			case 1:
-				refresh(data);
+			case 1: //standard
 				player = RiVAL;
 				break;
-			case 2:
+			case 2: //not near
 				printf("Nope! It's not next to any of your pieces.\n");
 				break;
-			case 3:
+			case 3: //not empty
 				printf("Nope! It's not empty!\n");
 				break;
-			case 4:
+			case 4: //calc
 				calc(data, count);
 				break;
-			case 5:
+			case 5: //rematch
 				reset(data);
 				count[0]=count[1]=count[2];
 				player = 1;
+				robot = false;
 				refresh(data);
 				break;
-
-
+			case 6: //robot mode
+				robot = true;
+				player = 1;
 		}
-		
+
 	}
 	return 0;
 }
@@ -74,7 +63,7 @@ int calc(int data[][LEN], int count[])
 					refresh(data);
 				}
 			player = RiVAL;
-				
+
 		}
 	}while(hasAdded[1] ||  hasAdded[2]);
 	refresh(data);
@@ -123,32 +112,46 @@ bool isNear(int data[][LEN], int x, int y, int player)
 
 
 
-int ask(int data[][LEN], int * player)
+int ask(int data[][LEN], int * player, bool robot)
 {
 	int ch;
 	int x, y;
-	printf("\nPlayer %d:\nnumber: ", *player);
-	while(scanf("%d", &x) != 1 || x < 1 || x > LEN)
+	int r;
+	if (*player == 1 || (*player == 2 && !robot))
 	{
-		if((ch = getchar()) == 'q')
-			return 0;
-		else if(ch == 'c')
-			return 4; //end and calc
-		else if(ch == 'r')
-			return 5; //rematch
-		else
-			getchar();
+		printf("\nPlayer %d:\nnumber: ", *player);
+		while(scanf("%d", &x) != 1 || x < 1 || x > LEN)
+		{
+			if((ch = getchar()) == 'q')
+				return 0;
+			else if(ch == 'c')
+				return 4; //end and calc
+			else if(ch == 'r')
+				return 5; //rematch
+			else if(ch == 'i')
+				return 6; //robot mode
+			else
+				getchar();
+		}
+		getchar();
+		printf("letter: ");
+		do
+		{
+			ch = getchar();
+			ch = toupper(ch);
+		}while(!(ch >= 'A' && ch < 'A' + LEN));
+		x -= 1;
+		y = ch - 65;
+		r = set(data, x, y, *player);
+		refresh(data);
+		return r;
 	}
-	getchar();
-	printf("letter: ");
-	do
+	else
 	{
-		ch = getchar();
-		ch = toupper(ch);
-	}while(!(ch >= 'A' && ch < 'A' + LEN));
-	x -= 1;
-	y = ch - 65;
-	return set(data, x, y, *player);
+		artidiot(data, *player);
+		return 1;
+
+	}
 }
 
 
@@ -193,11 +196,11 @@ int refresh(int data[][LEN])
 		}
 		printf("\n");
 	}
-		printf("\"q\" to quit.\n\"c\" to end and calculate\n\"r\" for a rematch\n");
+	printf("\"q\" to quit.\n\"c\" to end and calculate\n\"r\" for a rematch\n\"i\" to enter robot mode and summon ARTidiot v1\n");
 	return 0;
 }
 
-		
 
 
-				
+
+
