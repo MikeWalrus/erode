@@ -69,14 +69,7 @@ int calc(int data[][LEN], int count[])
 		{
 			for(int i = 0; i < WID; i++)
 				for(int j = 0; j < LEN; j++)
-				{/*
-					if((temp = set(data, i, j, player)) == 1 && hasAdded[player] == 0)
-				//	printf("%d",set(data,i,j,player));
-						hasAdded[player] = 1;
-					refresh(data);
-				//	printf("temp=%d has=%d player=%d\n", temp, hasAdded[player], player);
-					getchar();
-					*/
+				{
 					hasAdded[player] = (set(data, i, j, player) == 1 && hasAdded[player] == 0) ? 1 : hasAdded[player];
 					refresh(data);
 				}
@@ -156,27 +149,6 @@ int ask(int data[][LEN], int * player)
 	x -= 1;
 	y = ch - 65;
 	return set(data, x, y, *player);
-	/*
-	if(data[x][y] == 0)
-	{
-		if(isNear(data, x, y, *player))
-		{
-			data[x][y] = *player;
-			for(int i = x - 1; i <= x + 1; i++)
-				for(int j = y - 1; j <= y + 1; j++)
-					if(i >= 0 && i < WID && j >= 0 && j < LEN)
-						if(data[i][j] == RIVAL)
-							data[i][j] = *player;
-
-			*player = RIVAL;
-			return 1; //successfully set
-		}
-		else
-			return 2; //not near
-	}
-	else
-		return 3; //not empty
-		*/
 }
 
 
