@@ -12,13 +12,15 @@ int main(void)
 	int stat;
 	int count[] = {0, 0, 0};
 	bool robot = false;
+	bool robomatch = false;
 	reset(data);
 	refresh(data);
-	while((stat = ask(data, &player, robot)) != 0)
+	while((stat = ask(data, &player, robot, robomatch)) != 0)
 	{
 		switch(stat)
 		{
 			case 1: //standard
+				robomatch = false;
 				player = RiVAL;
 				break;
 			case 2: //not near
@@ -29,6 +31,7 @@ int main(void)
 				break;
 			case 4: //calc
 				calc(data, count);
+				robomatch = false;
 				break;
 			case 5: //rematch
 				reset(data);
@@ -40,6 +43,9 @@ int main(void)
 			case 6: //robot mode
 				robot = true;
 				player = 1;
+				break;
+			case 7: //bot vs bot
+				robomatch = true;
 		}
 
 	}
@@ -56,6 +62,7 @@ int calc(int data[][LEN], int count[])
 	int setReturn;
 	int eatCount;  
 	bool isDone = true;
+	int result;
 	for(int i = 0; i < WID; i++)
 		for(int j = 0; j < LEN; j++)
 			backup[i][j] = data[i][j];
@@ -86,11 +93,17 @@ int calc(int data[][LEN], int count[])
 			for(int j = 0; j < LEN; j++)
 				count[data[i][j]]++;
 		if(count[1] != count[2])
+		{
 			printf("Player %d wins!\n", ((count[1] > count[2]) ? 1 : 2));
+			result = ((count[1] > count[2]) ? 1 : 2);
+		}
 		else
+		{
 			printf("DRAW!\n");
+			result = 0;
+		}
 		printf("Player 1: %4d\nPlayer 2: %4d\n", count[1], count[2]);
-		return 1;
+		return result;
 	}
 	else
 	{
@@ -100,7 +113,7 @@ int calc(int data[][LEN], int count[])
 				data[i][j] = backup[i][j];
 		refresh(data);
 
-		return 0;
+		return -1;
 	}
 }
 
@@ -153,45 +166,68 @@ bool isNear(int data[][LEN], int x, int y, int player)
 
 
 
-int ask(int data[][LEN], int * player, bool robot)
+int ask(int data[][LEN], int * player, bool robot, bool robomatch)
 {
 	int ch;
 	int x, y;
 	int r;
-	if (*player == 1 || (*player == 2 && !robot))
+	int count[] = {0, 0, 0};
+	int bot[] = {0, 0, 0};
+	if (!robomatch)
 	{
-		printf("\nPlayer %d:\nnumber: ", *player);
-		while(scanf("%d", &x) != 1 || x < 1 || x > LEN)
+		if (*player == 1 || (*player == 2 && !robot))
 		{
-			if((ch = getchar()) == 'q')
-				return 0;
-			else if(ch == 'c')
-				return 4; //end and calc
-			else if(ch == 'r')
-				return 5; //rematch
-			else if(ch == 'i')
-				return 6; //robot mode
-			else
-				getchar();
+			printf("\nPlayer %d:\nnumber: ", *player);
+			while(scanf("%d", &x) != 1 || x < 1 || x > LEN)
+			{
+				if((ch = getchar()) == 'q')
+					return 0;
+				else if(ch == 'c')
+					return 4; //end and calc
+				else if(ch == 'r')
+					return 5; //rematch
+				else if(ch == 'i')
+					return 6; //robot mode
+				else if(ch == 'v')
+					return 7; //bot vs bot
+				else
+					getchar();
+			}
+			getchar();
+			printf("letter: ");
+			do
+			{
+				ch = getchar();
+				ch = toupper(ch);
+			}while(!(ch >= 'A' && ch < 'A' + LEN));
+			x -= 1;
+			y = ch - 65;
+			r = set(data, x, y, *player, 0);
+			refresh(data);
+			return r;
 		}
-		getchar();
-		printf("letter: ");
-		do
+		else
 		{
-			ch = getchar();
-			ch = toupper(ch);
-		}while(!(ch >= 'A' && ch < 'A' + LEN));
-		x -= 1;
-		y = ch - 65;
-		r = set(data, x, y, *player, 0);
-		refresh(data);
-		return r;
-	}
-	else
-	{
-		artidiot(data, *player);
-		return 1;
 
+			artidiot(data, *player);
+			return 1;
+
+		}
+	}
+	else //bot vs bot
+	{
+		for (int t = 1; t <= BTIMES; t++) 
+		{
+			while(artidiot(data, *player))
+			{
+				*player = RIVAL;
+			}
+			bot[calc(data, count)]++;
+			reset(data);
+			*player = 1;
+		}
+		printf("Bot 1:%3d Bot 2:%3d\n", bot[1], bot[2]);
+		return 1;
 	}
 }
 
@@ -237,7 +273,7 @@ int refresh(int data[][LEN])
 		}
 		printf("\n");
 	}
-	printf("\"q\" to quit.\n\"c\" to end and calculate\n\"r\" for a rematch\n\"i\" to enter robot mode and summon ARTidiot v1\n");
+	printf("\"q\" to quit.\n\"c\" to end and calculate\n\"r\" for a rematch\n\"i\" to enter robot mode and summon ARTidiot v1\n\"v\" to perform bot vs bot match %d time(s)", BTIMES);
 	return 0;
 }
 
