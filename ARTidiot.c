@@ -74,7 +74,8 @@ int artidiot(int data[][LEN], int player)
 	{
 		srand((unsigned)time(NULL));
 		final = rand() % options; //ARTidiot says,"My decision is final!"
-		set(data, choice[final][0], choice[final][1], player);
+		system("sleep 1");
+		set(data, choice[final][0], choice[final][1], player, 0);
 		refresh(data);
 		printf("I found a solution in %d ones, and used No. %d, though I am an idiot.\n", options, final + 1);
 		printf("I set down my piece at %d%c.\n", choice[final][0] + 1, choice[final][1] + 'A'); 

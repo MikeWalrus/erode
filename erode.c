@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <stdarg.h>
 #include "erode.h"
 
 int main(void)
@@ -48,38 +49,74 @@ int main(void)
 
 int calc(int data[][LEN], int count[])
 {
+	int backup[WID][LEN];
 	int player = 1;
 	int hasAdded[3]; 
 	int temp;
+	int setReturn;
+	int eatCount;  
+	bool isDone = true;
+	for(int i = 0; i < WID; i++)
+		for(int j = 0; j < LEN; j++)
+			backup[i][j] = data[i][j];
+
 	do
 	{
 		hasAdded[1] = hasAdded[2] = 0;
 		for(int i = 1; i <= 2; i++)
 		{
 			for(int i = 0; i < WID; i++)
-				for(int j = 0; j < LEN; j++)
+				for(int j = 0; j < LEN && isDone; j++)
 				{
-					hasAdded[player] = (set(data, i, j, player) == 1 && hasAdded[player] == 0) ? 1 : hasAdded[player];
+					setReturn = set(data, i, j, player, 1, &eatCount);
+					hasAdded[player] = (setReturn == 1 && hasAdded[player] == 0) ? 1 : hasAdded[player];
 					refresh(data);
+					if(eatCount != 0)
+						isDone = false;
 				}
 			player = RiVAL;
 
 		}
-	}while(hasAdded[1] ||  hasAdded[2]);
-	refresh(data);
-	for(int i = 0; i < WID; i++)
-		for(int j = 0; j < LEN; j++)
-			count[data[i][j]]++;
-	if(count[1] != count[2])
-		printf("Player %d wins!\n", ((count[1] > count[2]) ? 1 : 2));
+	}while((hasAdded[1] ||  hasAdded[2]) && isDone);
+	if(isDone)
+	{
+		refresh(data);
+		count[0] = count[1] = count[2] = 0;
+		for(int i = 0; i < WID; i++)
+			for(int j = 0; j < LEN; j++)
+				count[data[i][j]]++;
+		if(count[1] != count[2])
+			printf("Player %d wins!\n", ((count[1] > count[2]) ? 1 : 2));
+		else
+			printf("DRAW!\n");
+		printf("Player 1: %4d\nPlayer 2: %4d\n", count[1], count[2]);
+		return 1;
+	}
 	else
-		printf("DRAW!\n");
-	printf("Player 1: %4d\nPlayer 2: %4d\n", count[1], count[2]);
-	return 0;
+	{
+		printf("No, I don't think you have finished the game.\n");  
+		for(int i = 0; i < WID; i++)
+			for(int j = 0; j < LEN; j++)
+				data[i][j] = backup[i][j];
+		refresh(data);
+
+		return 0;
+	}
 }
 
-int set(int data[][LEN], int x, int y, int player)
+int set(int data[][LEN], int x, int y, int player, int parmN, ...)
 {
+	va_list ap;
+	va_list apcpy;
+	va_start(ap, parmN);
+	va_copy(apcpy, ap);
+	va_end(ap);
+	int *eatCount;
+	if (parmN >= 0)
+	{
+		eatCount = va_arg(apcpy, int *);
+		*eatCount = 0;
+	}
 	if(data[x][y] == 0)
 	{
 		if(isNear(data, x, y, player))
@@ -89,7 +126,11 @@ int set(int data[][LEN], int x, int y, int player)
 				for(int j = y - 1; j <= y + 1; j++)
 					if(i >= 0 && i < WID && j >= 0 && j < LEN)
 						if(data[i][j] == RiVAL)
+						{
 							data[i][j] = player;
+							if(parmN > 0)
+								*eatCount += 1;
+						}	
 			return 1; //successfully set
 		}
 		else
@@ -142,7 +183,7 @@ int ask(int data[][LEN], int * player, bool robot)
 		}while(!(ch >= 'A' && ch < 'A' + LEN));
 		x -= 1;
 		y = ch - 65;
-		r = set(data, x, y, *player);
+		r = set(data, x, y, *player, 0);
 		refresh(data);
 		return r;
 	}
