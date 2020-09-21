@@ -94,7 +94,12 @@ int calc(int data[][LEN], int count[])
 	}
 	else
 	{
-		printf("No, I don't think you have finished the game.\n");
+		printf("No, I don't think you have finished the game.\n");  
+		for(int i = 0; i < WID; i++)
+			for(int j = 0; j < LEN; j++)
+				data[i][j] = backup[i][j];
+		refresh(data);
+
 		return 0;
 	}
 }
@@ -109,8 +114,8 @@ int set(int data[][LEN], int x, int y, int player, int parmN, ...)
 	int *eatCount;
 	if (parmN >= 0)
 	{
-	eatCount = va_arg(apcpy, int *);
-	*eatCount = 0;
+		eatCount = va_arg(apcpy, int *);
+		*eatCount = 0;
 	}
 	if(data[x][y] == 0)
 	{

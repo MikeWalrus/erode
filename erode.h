@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
-#define WID 6
-#define LEN 6
+#define WID 12
+#define LEN 12
 #define RIVAL ((*player == 1) ? 2 : 1)
 #define RiVAL ((player == 1) ? 2 : 1)
 
